@@ -9,7 +9,7 @@ import cv2
 def capture_barcode(capture=True):
 	# initialize the video stream and allow the camera sensor to warm up
 	vs = VideoStream().start()
-	time.sleep(2.0)
+	time.sleep(0.0)
 
 	while capture == True:
 		# grab the frame from the threaded video stream and resize it to
@@ -33,12 +33,14 @@ def capture_barcode(capture=True):
 			if (len(barcodeData) == 13 or len(barcodeData) == 10) and (barcodeData[:3] == '978' or barcodeData[:3] == '979'):
 				cv2.destroyAllWindows()
 				VideoStream().stop()
+				print("\a")
 				capture = False
 				break
 
 		# show the output frame
 		cv2.imshow("Barcode Scanner", frame)
 		key = cv2.waitKey(1) & 0xFF
+
 	return barcodeData
 
 

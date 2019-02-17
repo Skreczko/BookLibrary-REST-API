@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
 
-
+    'accounts',
     'books',
 
 
@@ -54,6 +54,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+# for custom user model
+AUTH_USER_MODEL = 'accounts.MyUser'
 
 ROOT_URLCONF = 'src.urls'
 
@@ -124,3 +126,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, "locale/"),
+)
+
+
+#JWT REST FRAMEWORK
+from src.restconf.main import *
