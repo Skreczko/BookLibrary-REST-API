@@ -8,7 +8,6 @@ import cv2
 
 def capture_barcode(capture=True):
 	# initialize the video stream and allow the camera sensor to warm up
-	print("[INFO] starting video stream...")
 	vs = VideoStream().start()
 	time.sleep(2.0)
 
@@ -31,11 +30,9 @@ def capture_barcode(capture=True):
 			# the barcode data is a bytes object so if we want to draw it
 			# on our output image we need to convert it to a string first
 			barcodeData = barcode.data.decode("utf-8")
-			print(len(barcodeData))
-			if len(barcodeData) == 13 or len(barcodeData) == 10:
+			if (len(barcodeData) == 13 or len(barcodeData) == 10) and (barcodeData[:3] == '978' or barcodeData[:3] == '979'):
 				cv2.destroyAllWindows()
 				VideoStream().stop()
-				print("[INFO] cleaning up...", barcodeData)
 				capture = False
 				break
 
