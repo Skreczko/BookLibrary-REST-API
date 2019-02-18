@@ -6,7 +6,7 @@ from .serializers import BookSerializer
 from books.models import Book
 from books.video_barcode import *
 
-class rwrw(generics.ListCreateAPIView):
+class BookListAPIView(generics.ListAPIView):
 	permission_classes 		= []
 	authentication_classes 	= []
 	serializer_class 		= BookSerializer
