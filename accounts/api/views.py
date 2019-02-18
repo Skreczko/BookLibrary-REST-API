@@ -4,7 +4,7 @@ from rest_framework import generics, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import UserLoginSerializer, UserRegisterSerializer
-from account.models import MyUser
+from accounts.models import MyUser
 
 
 from .permissions import IsAnonymous, IsStaffUser
@@ -38,7 +38,7 @@ class AuthAPIView(APIView):
 				payload = jwt_payload_handler(user)
 				token = jwt_encode_handler(payload)
 				my_payload = jwt_response_payload_handler(token, user, request=request)
-				# print(payload,"\n\n\n\n",token,"\n\n\n\n",my_payload)
+				print(payload,"\n\n\n\n",token,"\n\n\n\n",my_payload)
 				return Response(my_payload)
 			else:
 				return Response({'detail': 'Invalid credential'}, status=401)

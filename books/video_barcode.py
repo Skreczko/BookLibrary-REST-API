@@ -32,9 +32,10 @@ def capture_barcode(capture=True):
 			barcodeData = barcode.data.decode("utf-8")
 			if (len(barcodeData) == 13 or len(barcodeData) == 10) and (barcodeData[:3] == '978' or barcodeData[:3] == '979'):
 				cv2.destroyAllWindows()
-				VideoStream().stop()
+				vs.stop()
 				print("\a")
 				capture = False
+				VideoStream().stop()
 				break
 
 		# show the output frame
@@ -48,8 +49,5 @@ def capture_barcode(capture=True):
 
 
 
-ISBN = capture_barcode()
-
-print (ISBN)
 
 

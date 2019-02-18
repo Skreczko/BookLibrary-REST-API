@@ -3,7 +3,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from rest_framework import serializers
-from account.models import MyUser
+from accounts.models import MyUser
 
 expire_delta = settings.JWT_AUTH['JWT_REFRESH_EXPIRATION_DELTA']
 
