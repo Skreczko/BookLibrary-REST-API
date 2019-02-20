@@ -5,7 +5,7 @@ from .models import Book, BookAmount, BorrowedBook
 
 class BookAdmin(admin.ModelAdmin):
 
-	list_display = ['ISBN','title', 'amount', 'author', 'publisher', 'is_photo']
+	list_display = ['id','ISBN','title', 'amount', 'author', 'publisher', 'is_photo']
 	search_fields = ['ISBN']
 	readonly_fields = ['show_photo']
 	list_per_page = 50

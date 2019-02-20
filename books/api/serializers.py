@@ -23,3 +23,7 @@ class BookSerializer(serializers.ModelSerializer):
 			'description',
 			'photo',
 		]
+class ConfmirmationSerializer(serializers.Serializer):
+	confirm_create_by_barcode = serializers.BooleanField(default=False)
+
+
