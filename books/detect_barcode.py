@@ -34,5 +34,4 @@ def capture_barcode():
 
 ISBN = capture_barcode()
 
-print (ISBN)
 
