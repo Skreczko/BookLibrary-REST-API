@@ -1,5 +1,3 @@
-from django.contrib.auth import get_user_model
-from django.db.models import Q
 import datetime
 from rest_framework.reverse import reverse
 from rest_framework import serializers
@@ -8,12 +6,9 @@ from books.api.serializers import BOOK_EXCEED_PAYMENT, BorrowedBookSerializer
 
 from rest_framework_jwt.settings import api_settings
 
-
 jwt_payload_handler             = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler              = api_settings.JWT_ENCODE_HANDLER
 jwt_response_payload_handler    = api_settings.JWT_RESPONSE_PAYLOAD_HANDLER
-
-
 
 class UserSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -23,6 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
 			'username',
 			'email'
 		]
+
 
 class UserListSerializer(serializers.ModelSerializer):
 	uri = serializers.SerializerMethodField(read_only=True)
@@ -40,10 +36,10 @@ class UserListSerializer(serializers.ModelSerializer):
 		return reverse('account:user-detail', kwargs={'username': obj.username}, request=request)
 
 
-
 class UserDetailSerializer(serializers.ModelSerializer):
 	books = serializers.SerializerMethodField(read_only=True)
 	total_exceeded_payment = serializers.SerializerMethodField(read_only=True)
+	borrowing_history = serializers.SerializerMethodField(read_only=True)
 	class Meta:
 		model = MyUser
 		fields = [
@@ -52,6 +48,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 			'email',
 			'books',
 			'total_exceeded_payment',
+			'borrowing_history',
 		]
 
 	def get_books(self, obj):
@@ -67,8 +64,18 @@ class UserDetailSerializer(serializers.ModelSerializer):
 				total_payment += float('{0:.2f}'.format((datetime.datetime.now().date() - item.return_date).days * BOOK_EXCEED_PAYMENT))
 		return float('{0:.2f}'.format(total_payment))
 
+	def get_borrowing_history(self, obj):
+		request = self.context.get('request')
+		return reverse('account:user-list-history', kwargs={'username':obj.username}, request=request)
+
+
 class ConfmirmationSerializer(serializers.Serializer):
 	confirm_adding_book_by_barcode = serializers.BooleanField(default=False)
+
+
+class UserBookExtensionBookSerializer(serializers.Serializer):
+	book_id= serializers.IntegerField()
+
 
 class UserLoginSerializer(serializers.ModelSerializer):
 	password 	= serializers.CharField(style={'input_type': 'password'}, write_only=True)
@@ -78,6 +85,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
 			'username',
 			'password',
 		]
+
 
 class UserRegisterSerializer(serializers.ModelSerializer):
 	password 	= serializers.CharField(style={'input_type': 'password'}, write_only=True)
@@ -139,7 +147,3 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 		user.is_staff = False
 		user.save()
 		return user
-
-
-
-

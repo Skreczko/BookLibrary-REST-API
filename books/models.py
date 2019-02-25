@@ -1,8 +1,5 @@
 from django.db import models
-from django.db.models.signals import post_save
 from django.conf import settings
-from datetime import datetime
-
 from datetime import datetime
 from datetime import timedelta
 
@@ -36,14 +33,11 @@ class BorrowedBook(models.Model):
 	user 			= models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='borrowedbook_user')
 	book			= models.ForeignKey(Book, on_delete=models.CASCADE, related_name='borrowedbook_book')
 	borrow_date		= models.DateField(auto_now_add=True)
-	return_date		= models.DateField(blank=True, null=True, help_text='If none: default for 7 days')
-
-def post_save_return_date(sender,created, instance, *args, **kwargs):
-	if created:
-		if not instance.return_date:
-			instance.return_date = instance.borrow_date + timedelta(days=7)
-
-post_save.connect(post_save_return_date, sender=BorrowedBook)
+	return_date		= models.DateField(default=(datetime.now().date() + timedelta(days=7)) ,help_text='If none: default for 7 days')
 
 
-
+class BorrowedBookHistory(models.Model):
+	user 			= models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='borrowedbook_user_history')
+	book			= models.ForeignKey(Book, on_delete=models.CASCADE, related_name='borrowedbook_book_history')
+	borrow_date		= models.DateField()
+	return_date		= models.DateField()

@@ -1,9 +1,7 @@
-from django.conf.urls import url, include
 from django.urls import path
-
 from rest_framework_jwt.views import refresh_jwt_token, obtain_jwt_token # accounts app
-
-from .views import AuthAPIView, RegisterAPIView, UserListAPIView, UserDetailAPIView, UserDetailScanAPIView
+from .views import AuthAPIView, RegisterAPIView, UserListAPIView,\
+    UserDetailAPIView, UserBorrowedBookAPIView, UserBorrowedBookHistoryAPIView
 
 app_name = 'account'
 
@@ -15,6 +13,7 @@ urlpatterns = [
 
     path('user/', UserListAPIView.as_view(), name='user-list'),
     path('user/<username>/', UserDetailAPIView.as_view(), name='user-detail'),
-    path('user/<username>/scan/', UserDetailScanAPIView.as_view(), name='user-detail-scan'),
+    path('user/<username>/history/', UserBorrowedBookHistoryAPIView.as_view(), name='user-list-history'),
+    path('user/<username>/<id>/', UserBorrowedBookAPIView.as_view(), name='user-book-detail'),
 
 ]

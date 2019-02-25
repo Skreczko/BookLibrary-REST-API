@@ -51,7 +51,6 @@ class BookDetailAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, gener
 						return Response(
 							{'error_message': '{} does not exists in database'.format(user_from_barcode)},
 							status=status.HTTP_400_BAD_REQUEST)
-
 					if Book.objects.get(id=book_id).book_left == 0:
 						return Response({'error_message': '{}: {} out of stock.'.format(book_obj.title,book_obj.author)},
 										status=status.HTTP_400_BAD_REQUEST)
@@ -68,7 +67,6 @@ class BookDetailAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, gener
 			else:
 				return Response({'message': 'User will not be added'},
 								status=status.HTTP_200_OK)
-
 
 	def put(self, request, *args, **kwargs):
 		return self.update(request, *args, **kwargs)
@@ -107,7 +105,6 @@ class BookByBarcode(APIView):
 						publishedDate = serializer.json()['items'][0]['volumeInfo']['publishedDate'] or None
 						if len(publishedDate)>4:
 							publishedDate = publishedDate[:4]
-
 						if Book.objects.filter(ISBN=ISBN).exists():
 							return Response({'detail': [
 								{'message': 'This book already exists in database.'},
@@ -129,11 +126,6 @@ class BookByBarcode(APIView):
 			else:
 				return Response({'message': 'New book will not be added'},
 							status=status.HTTP_200_OK)
-
-
-
-
-
 
 	def get(self, request, *args, **kwargs):
 		number = capture_barcode()
@@ -159,9 +151,3 @@ class BookByBarcode(APIView):
 			except:
 				return Response({'message': 'This book does not exists in google database. Please add book manually.'},
 								status=status.HTTP_404_NOT_FOUND)
-
-
-
-
-
-
