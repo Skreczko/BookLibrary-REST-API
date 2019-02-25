@@ -1,15 +1,23 @@
-REST API web application for library.
+REST API web application for managing a library.
 -
 
 **To create an example database, please run script EXAMPLE_DATABASE.py - remember to change admin credentials**
 
+This applications using built_in camera to read barcodes from books(ISBN number) and read NonStaffUser(from ID's barcode)
+
+
+To register/log in - application is using JWT tokens
+
+
 Web application contains:
 
--possibility to use built-in camera to scan barcodes and getting ISBN book number.
 
-In /scan/ section user check if book exists in database
+-Possibility to scan barcodes to check if book exists in Library's database, if not, StaffUser can add book from GoogleAPIS books using this barcode
 
-1) If yes, redirect to book detail
-2) If not, user decides if add new book - if user confirm adding, API ask to scan barcode again, add book to database from GOOGLEAPIS and redirect to book detail- possibility to add books by using built-in camera (reading ISBN from barcode) and using googleapis.
+-Possibility to add NonStaffUser, who can borrow books with borrow date and returning date. If NonStaffUser exceedes returning date then user must pay fee depends on exceeded days
+
+-Possibility to check User Borrowing book history
+
+
 
 
