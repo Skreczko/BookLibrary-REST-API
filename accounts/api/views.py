@@ -3,9 +3,14 @@ from django.db.models import Q
 from rest_framework import generics, mixins, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.shortcuts import redirect
+from rest_framework.reverse import reverse
+
 from .serializers import UserLoginSerializer, UserRegisterSerializer,\
 	UserSerializer, UserListSerializer, UserDetailSerializer, ConfmirmationSerializer
 from accounts.models import MyUser
+from books.video_barcode import *
+from books.models import BorrowedBook, Book
 
 
 from .permissions import IsAnonymous, IsStaffUser
@@ -65,26 +70,36 @@ class UserListAPIView(generics.ListAPIView):
 class UserDetailAPIView(APIView):
 	permission_classes 		= []
 	authentication_classes 	= []
+	serializer_class 		= ConfmirmationSerializer
+	queryset 				= MyUser.objects.all()
 
-	def get_serializer_class(self):
-		if self.request.method == 'GET':
-			return UserDetailSerializer
-		else:
-			return ConfmirmationSerializer
+	# def get_serializer_class(self):
+	# 	if self.request.method == 'GET':
+	# 		return UserDetailSerializer
+	# 	elif self.request.method == 'POST':
+	# 		return ConfmirmationSerializer
 
-	def post(self, request, format=None):
-		serializer = self.get_serializer_class()(data=request.data)
-		print(serializer.data)
+	def post(self, request, format=None, **kwargs):
+		serializer = ConfmirmationSerializer(data=request.data)
 		if serializer.is_valid():
-			return Response({'detail': [
-								{'message': 'This book already exists in database.'},
-							]})
+			if serializer.data.get('confirm_adding_book_by_barcode') == True:
+				number = capture_barcode()
+				if number:
+					BorrowedBook.objects.create(
+						user=MyUser.objects.get(username=self.kwargs.get('username')),
+						book=Book.objects.get(ISBN=int(number)),
+					).save()
+					return redirect(reverse('account:user-detail', kwargs={'username': self.kwargs.get('username')}))
+
+		return Response({'detail': 'This book already exists in database.'})
+
+
+
 	def get_queryset(self):
 		return MyUser.objects.filter(username=self.kwargs.get('username'))
 
-
 	def get(self, request, *args, **kwargs):
-		serializer = self.get_serializer_class()(self.get_queryset(), many=True)
+		serializer = UserDetailSerializer(self.get_queryset(), many=True, context={'request': request})
 		return Response(serializer.data)
 
 
@@ -94,7 +109,7 @@ class UserDetailAPIView(APIView):
 
 
 
-from books.models import BorrowedBook
+
 from books.api.serializers import aaaSerializer
 
 class UserDetailScanAPIView(generics.ListAPIView):
