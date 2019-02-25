@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import pre_save
 from django.conf import settings
 from datetime import datetime
 
@@ -36,13 +36,13 @@ class BorrowedBook(models.Model):
 	user 			= models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='borrowedbook_user')
 	book			= models.ForeignKey(Book, on_delete=models.CASCADE, related_name='borrowedbook_book')
 	borrow_date		= models.DateField(auto_now_add=True)
+	return_date		= models.DateField(blank=True, null=True, help_text='If none: default for 7 days')
 
-	@property
-	def return_date(self):
-		r_date = datetime.now().date() + timedelta(days=7)
-		return r_date
+def pre_save_return_date(sender, instance, *args, **kwargs):
+	if not instance.return_date:
+		instance.return_date = instance.borrow_date + timedelta(days=7)
 
-
+pre_save.connect(pre_save_return_date, sender=BorrowedBook)
 
 
 

@@ -28,13 +28,10 @@ class BookAdmin(admin.ModelAdmin):
 
 
 class BorrowedBookAdmin(admin.ModelAdmin):
-	list_display = ['user', 'book', 'borrow_date',
-					'return_date'
-					]
+	list_display = ['user', 'book', 'borrow_date', 'return_date',]
 	list_per_page = 50
-	readonly_fields = ['borrow_date',
-					   'return_date'
-					   ]
+	readonly_fields = ['borrow_date',]
+
 	class Meta:
 		model = BorrowedBook
 

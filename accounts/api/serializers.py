@@ -1,8 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+import datetime
+from rest_framework.reverse import reverse
 from rest_framework import serializers
 from accounts.models import MyUser
-
+from books.api.serializers import BOOK_EXCEED_PAYMENT, BorrowedBookSerializer
 
 from rest_framework_jwt.settings import api_settings
 
@@ -21,6 +23,52 @@ class UserSerializer(serializers.ModelSerializer):
 			'username',
 			'email'
 		]
+
+class UserListSerializer(serializers.ModelSerializer):
+	uri = serializers.SerializerMethodField(read_only=True)
+	class Meta:
+		model = MyUser
+		fields = [
+			'id',
+			'uri',
+			'username',
+			'email'
+		]
+
+	def get_uri(self,obj):
+		request = self.context.get('request')
+		return reverse('account:user-detail', kwargs={'username': obj.username}, request=request)
+
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+	books = serializers.SerializerMethodField(read_only=True)
+	total_exceeded_payment = serializers.SerializerMethodField(read_only=True)
+	class Meta:
+		model = MyUser
+		fields = [
+			'id',
+			'username',
+			'email',
+			'books',
+			'total_exceeded_payment',
+		]
+
+	def get_books(self, obj):
+		request = self.context.get('request')
+		qs = obj.borrowedbook_user.all()
+		return BorrowedBookSerializer(qs, many=True, context={'request': request}).data
+
+	def get_total_exceeded_payment(self, obj):
+		qs = obj.borrowedbook_user.all()
+		total_payment = 0
+		for item in qs:
+			if item.return_date < datetime.datetime.now().date():
+				total_payment += float('{0:.2f}'.format((datetime.datetime.now().date() - item.return_date).days * BOOK_EXCEED_PAYMENT))
+		return float('{0:.2f}'.format(total_payment))
+
+class ConfmirmationSerializer(serializers.Serializer):
+	confirm_adding_book_by_barcode = serializers.BooleanField(default=False)
 
 class UserLoginSerializer(serializers.ModelSerializer):
 	password 	= serializers.CharField(style={'input_type': 'password'}, write_only=True)

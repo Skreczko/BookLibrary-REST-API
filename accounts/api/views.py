@@ -1,9 +1,10 @@
 from django.contrib.auth import authenticate, get_user_model
 from django.db.models import Q
-from rest_framework import generics, permissions
+from rest_framework import generics, mixins, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import UserLoginSerializer, UserRegisterSerializer
+from .serializers import UserLoginSerializer, UserRegisterSerializer,\
+	UserSerializer, UserListSerializer, UserDetailSerializer, ConfmirmationSerializer
 from accounts.models import MyUser
 
 
@@ -51,6 +52,59 @@ class RegisterAPIView(generics.CreateAPIView):
 	permission_classes 		= [IsAnonymous]
 	serializer_class 		= UserRegisterSerializer
 	queryset 				= User.objects.all()
+
+
+class UserListAPIView(generics.ListAPIView):
+	permission_classes 		= []
+	authentication_classes 	= []
+	serializer_class 		= UserListSerializer
+	queryset 				= MyUser.objects.all()
+
+
+
+class UserDetailAPIView(APIView):
+	permission_classes 		= []
+	authentication_classes 	= []
+
+	def get_serializer_class(self):
+		if self.request.method == 'GET':
+			return UserDetailSerializer
+		else:
+			return ConfmirmationSerializer
+
+	def post(self, request, format=None):
+		serializer = self.get_serializer_class()(data=request.data)
+		print(serializer.data)
+		if serializer.is_valid():
+			return Response({'detail': [
+								{'message': 'This book already exists in database.'},
+							]})
+	def get_queryset(self):
+		return MyUser.objects.filter(username=self.kwargs.get('username'))
+
+
+	def get(self, request, *args, **kwargs):
+		serializer = self.get_serializer_class()(self.get_queryset(), many=True)
+		return Response(serializer.data)
+
+
+
+
+
+
+
+
+from books.models import BorrowedBook
+from books.api.serializers import aaaSerializer
+
+class UserDetailScanAPIView(generics.ListAPIView):
+	permission_classes 		= []
+	authentication_classes 	= []
+	serializer_class 		= aaaSerializer
+	queryset 				= BorrowedBook.objects.all()
+
+
+
 
 
 

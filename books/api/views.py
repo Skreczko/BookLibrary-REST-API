@@ -65,6 +65,10 @@ class BookDetailAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, gener
 						BorrowedBook.objects.create(user=user, book=book_obj).save()
 						return Response({'message': "{} has been added successfully to {}'s loan list".format(user, book_obj.title)},
 										status=status.HTTP_201_CREATED)
+			else:
+				return Response({'message': 'User will not be added'},
+								status=status.HTTP_200_OK)
+
 
 	def put(self, request, *args, **kwargs):
 		return self.update(request, *args, **kwargs)
