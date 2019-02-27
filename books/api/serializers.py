@@ -175,23 +175,14 @@ class BorrowedBookSerializer(serializers.ModelSerializer):
 
 class BorrowedBookHistorySerializer(serializers.ModelSerializer):
 	book = BookListHistorySerializer(Book, many=False, read_only=True)
-	uri = serializers.SerializerMethodField(read_only=True)
 	class Meta:
 		model = BorrowedBook
 		fields = [
 			'id',
-			'uri',
 			'borrow_date',
 			'return_date',
 			'book',
 		]
-
-	def get_uri(self, obj):
-		request=self.context.get('request')
-		username = obj.user.username
-		return reverse('account:user-book-detail', kwargs={'username':username,
-														   'id':obj.id}, request=request)
-
 
 class UserBorrowedBookSerializer(serializers.ModelSerializer):
 	book = BookListSerializer(Book, many=False, read_only=True)

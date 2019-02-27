@@ -15,7 +15,8 @@ from books.models import BorrowedBook, Book, BorrowedBookHistory
 from books.api.serializers import BorrowedBookSerializer, BorrowedBookHistorySerializer
 
 
-from .permissions import IsAnonymous, IsStaffUser
+from .permissions import IsAnonymous, IsStaffUser, IsStaffOrOwner, IsStaffObjectPermission,\
+	IsStaffCRUDPermission
 from rest_framework_jwt.settings import api_settings
 
 jwt_payload_handler             = api_settings.JWT_PAYLOAD_HANDLER
@@ -60,17 +61,32 @@ class RegisterAPIView(generics.CreateAPIView):
 
 
 class UserListAPIView(generics.ListAPIView):
-	permission_classes 		= []
-	authentication_classes 	= []
+	# permission_classes 		= [IsStaffUser]
+	# authentication_classes 	= []
 	serializer_class 		= UserListSerializer
 	queryset 				= MyUser.objects.all()
 
+	def get_queryset(self, *args, **kwargs):
+		if self.request.user.is_staff:
+			return MyUser.objects.all()
+		return MyUser.objects.filter(username=self.request.user)
+
 
 class UserDetailAPIView(APIView):
-	permission_classes 		= []
-	authentication_classes 	= []
+	permission_classes 		= [IsStaffCRUDPermission]
+	# authentication_classes 	= []
 	serializer_class 		= ConfmirmationSerializer
 	queryset 				= MyUser.objects.all()
+
+	def get_queryset(self, *args, **kwargs):
+		user_from_token = MyUser.objects.filter(username=self.request.user)
+		user_from_url = MyUser.objects.filter(username=self.kwargs.get('username'))
+		if user_from_token.first() == user_from_url.first():
+			return user_from_url
+		elif user_from_token.first().is_staff:
+			return user_from_url
+		else:
+			return MyUser.objects.none()
 
 	def post(self, request, format=None, **kwargs):
 		serializer = ConfmirmationSerializer(data=request.data)
@@ -96,26 +112,41 @@ class UserDetailAPIView(APIView):
 						return redirect(reverse('account:user-detail', kwargs={'username': self.kwargs.get('username')}))
 			return Response({'message': 'New book will not be added'}, status=status.HTTP_200_OK)
 
-	def get_queryset(self):
-		return MyUser.objects.filter(username=self.kwargs.get('username'))
 
 	def get(self, request, *args, **kwargs):
-		serializer = UserDetailSerializer(self.get_queryset(), many=True, context={'request': request})
-		return Response(serializer.data)
+		if self.get_queryset():
+			serializer = UserDetailSerializer(self.get_queryset(), many=True, context={'request': request})
+			return Response(serializer.data)
+		return Response({'detail': 'Invalid Authorization header. No credentials provided.'},
+						status=status.HTTP_401_UNAUTHORIZED)
+
 
 
 class UserBorrowedBookAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin,generics.RetrieveAPIView):
-	permission_classes 		= []
-	authentication_classes 	= []
+	permission_classes 		= [IsStaffObjectPermission]
+	# authentication_classes 	= []
 	queryset 				= BorrowedBook.objects.all()
 	serializer_class		= BorrowedBookSerializer
 	lookup_field 			= 'id'
 
-	def get_queryset(self):
-		return BorrowedBook.objects.filter(user__username=self.kwargs.get('username'))
+	def get_queryset(self, *args, **kwargs):
+		user_from_token = MyUser.objects.filter(username=self.request.user).first()
+		user_from_url = MyUser.objects.filter(username=self.kwargs.get('username')).first()
+		if user_from_token == user_from_url or user_from_token.is_staff:
+			return BorrowedBook.objects.filter(user=user_from_url)
+		return BorrowedBook.objects.none()
+
+	def get(self, request, *args, **kwargs):
+		if self.get_queryset():
+			return super().get(request, *args, **kwargs)
+		return Response({'detail': 'Invalid Authorization header. No credentials provided.'},
+						status=status.HTTP_401_UNAUTHORIZED)
 
 	def put(self, request, *args, **kwargs):
-		return self.update(request, *args, **kwargs)
+		if self.get_queryset():
+			return super().update(request, *args, **kwargs)
+		return Response({'detail': 'Invalid Authorization header. No credentials provided.'},
+						status=status.HTTP_401_UNAUTHORIZED)
 
 	def delete(self, request, *args, **kwargs):
 		instance = self.get_object()
@@ -129,11 +160,21 @@ class UserBorrowedBookAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin,
 
 
 class UserBorrowedBookHistoryAPIView(generics.ListAPIView):
-	permission_classes 		= []
-	authentication_classes 	= []
+	permission_classes 		= [IsStaffObjectPermission]
+	# authentication_classes 	= []
 	queryset 				= BorrowedBookHistory.objects.all()
 	serializer_class		= BorrowedBookHistorySerializer
 	lookup_field 			= 'id'
 
 	def get_queryset(self):
-		return BorrowedBookHistory.objects.filter(user__username=self.kwargs.get('username'))
+		user_from_token = MyUser.objects.filter(username=self.request.user).first()
+		user_from_url = MyUser.objects.filter(username=self.kwargs.get('username')).first()
+		if user_from_token == user_from_url or user_from_token.is_staff:
+			return BorrowedBookHistory.objects.filter(user=user_from_url)
+		return BorrowedBookHistory.objects.none()
+
+	def get(self, request, *args, **kwargs):
+		if self.get_queryset():
+			return super().get(request, *args, **kwargs)
+		return Response({'detail': 'Invalid Authorization header. No credentials provided.'},
+						status=status.HTTP_401_UNAUTHORIZED)
