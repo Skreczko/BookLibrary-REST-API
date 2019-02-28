@@ -1,31 +1,37 @@
-from rest_framework import generics, mixins, permissions
+from rest_framework import generics, mixins
 import requests
 from rest_framework.reverse import reverse
 from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import BookSerializer, BookListSerializer, ConfmirmationSerializer, ConfmirmationUserAddSerializer, BorrowedBookSerializer
+from .serializers import BookSerializer, BookListSerializer, ConfmirmationSerializer, ConfmirmationUserAddSerializer
 from books.models import Book, BorrowedBook
 from accounts.models import MyUser
 from books.video_barcode import *
+from accounts.api.permissions import IsStaffOrReadOnly
 
 class BookListAPIView(generics.ListCreateAPIView):
 	permission_classes 		= []
-	authentication_classes 	= []
 	serializer_class 		= None
 	queryset 				= Book.objects.all()
 
-	def get_serializer_class(self):
+	def get_serializer_class(self, *args, **kwargs):
 		if self.request.method == 'POST':
 			return BookSerializer
 		if self.request.method == 'GET':
 			return BookListSerializer
 
+	def post(self, request, *args, **kwargs):
+		if self.request.user.is_staff:
+			return super().post(request, *args, **kwargs)
+		else:
+			return Response({'detail': 'Authentication credentials were not provided.'},
+							status=status.HTTP_403_FORBIDDEN)
+
 
 class BookDetailAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.RetrieveAPIView):
-	permission_classes 		= []
-	authentication_classes 	= []
+	permission_classes 		= [IsStaffOrReadOnly]
 	serializer_class 		= None
 	queryset 				= Book.objects.all()
 	lookup_field 			= 'id'
@@ -35,6 +41,9 @@ class BookDetailAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, gener
 			return ConfmirmationUserAddSerializer
 		else:
 			return BookSerializer
+
+	def get_serializer_context(self, *args, **kwargs):
+		return {"logged_user": self.request.user, 'request': self.request}
 
 	def post(self, request, *args, **kwargs):
 		serializer = ConfmirmationUserAddSerializer(data=request.data)
@@ -55,14 +64,17 @@ class BookDetailAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, gener
 						return Response({'error_message': '{}: {} out of stock.'.format(book_obj.title,book_obj.author)},
 										status=status.HTTP_400_BAD_REQUEST)
 					elif BorrowedBook.objects.filter(user=user.id, book=book_obj).exists():
-						return Response({'error_message': "{}: {} already exists in {}'s loan list".format(book_obj.title, book_obj.author, user)},
+						return Response({'error_message': "{}: {} already exists in {}'s loan list".format(book_obj.title,
+																										   book_obj.author,
+																										   user)},
 										status=status.HTTP_400_BAD_REQUEST)
 					elif BorrowedBook.objects.filter(user=user.id).count() >= 5:
 						return Response({'error_message': '{} reached limit of loan books.'.format(user)},
 										status=status.HTTP_400_BAD_REQUEST)
 					else:
 						BorrowedBook.objects.create(user=user, book=book_obj).save()
-						return Response({'message': "{} has been added successfully to {}'s loan list".format(user, book_obj.title)},
+						return Response({'message': "{} has been added successfully to {}'s loan list".format(user,
+																										book_obj.title)},
 										status=status.HTTP_201_CREATED)
 			else:
 				return Response({'message': 'User will not be added'},
@@ -76,8 +88,7 @@ class BookDetailAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, gener
 
 
 class BookByBarcode(APIView):
-	permission_classes 		= []
-	authentication_classes 	= []
+	permission_classes 		= [IsStaffOrReadOnly]
 	serializer_class 		= ConfmirmationSerializer
 	queryset 				= Book.objects.all()
 
@@ -146,6 +157,7 @@ class BookByBarcode(APIView):
 					obj = Book.objects.get(ISBN=ISBN)
 					return redirect(reverse('books:book-detail', kwargs={'id':obj.id}))
 				else:
+
 					return Response({'message': 'This book does not exists in database. Please confirm creating book.'},
 										status=status.HTTP_400_BAD_REQUEST)
 			except:

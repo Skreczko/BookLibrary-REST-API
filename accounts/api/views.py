@@ -1,22 +1,18 @@
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import get_user_model
 from django.db.models import Q
-from rest_framework import generics, mixins, permissions
+from rest_framework import generics, mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import redirect
 from rest_framework.reverse import reverse
 from rest_framework import status
-
 from .serializers import UserLoginSerializer, UserRegisterSerializer,\
 	UserListSerializer, UserDetailSerializer, ConfmirmationSerializer
 from accounts.models import MyUser
 from books.video_barcode import *
 from books.models import BorrowedBook, Book, BorrowedBookHistory
 from books.api.serializers import BorrowedBookSerializer, BorrowedBookHistorySerializer
-
-
-from .permissions import IsAnonymous, IsStaffUser, IsStaffOrOwner, IsStaffObjectPermission,\
-	IsStaffCRUDPermission
+from .permissions import IsAnonymous, IsStaffObjectPermission, IsStaffCRUDPermission
 from rest_framework_jwt.settings import api_settings
 
 jwt_payload_handler             = api_settings.JWT_PAYLOAD_HANDLER
@@ -32,7 +28,7 @@ class AuthAPIView(APIView):
 
 	def post(self, request, *args, **kwargs):
 		if request.user.is_authenticated:
-			return Response({'detail': 'You are already logged'}, status=400)
+			return Response({'detail': 'You are already logged'}, status=status.HTTP_400_BAD_REQUEST)
 		data = request.data
 		username = data.get('username')
 		password = data.get('password')
@@ -61,8 +57,6 @@ class RegisterAPIView(generics.CreateAPIView):
 
 
 class UserListAPIView(generics.ListAPIView):
-	# permission_classes 		= [IsStaffUser]
-	# authentication_classes 	= []
 	serializer_class 		= UserListSerializer
 	queryset 				= MyUser.objects.all()
 
@@ -74,7 +68,6 @@ class UserListAPIView(generics.ListAPIView):
 
 class UserDetailAPIView(APIView):
 	permission_classes 		= [IsStaffCRUDPermission]
-	# authentication_classes 	= []
 	serializer_class 		= ConfmirmationSerializer
 	queryset 				= MyUser.objects.all()
 
@@ -112,19 +105,16 @@ class UserDetailAPIView(APIView):
 						return redirect(reverse('account:user-detail', kwargs={'username': self.kwargs.get('username')}))
 			return Response({'message': 'New book will not be added'}, status=status.HTTP_200_OK)
 
-
 	def get(self, request, *args, **kwargs):
 		if self.get_queryset():
 			serializer = UserDetailSerializer(self.get_queryset(), many=True, context={'request': request})
 			return Response(serializer.data)
-		return Response({'detail': 'Invalid Authorization header. No credentials provided.'},
-						status=status.HTTP_401_UNAUTHORIZED)
-
+		return Response({'detail': 'Authentication credentials were not provided.'},
+						status=status.HTTP_403_FORBIDDEN)
 
 
 class UserBorrowedBookAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin,generics.RetrieveAPIView):
 	permission_classes 		= [IsStaffObjectPermission]
-	# authentication_classes 	= []
 	queryset 				= BorrowedBook.objects.all()
 	serializer_class		= BorrowedBookSerializer
 	lookup_field 			= 'id'
@@ -139,14 +129,14 @@ class UserBorrowedBookAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin,
 	def get(self, request, *args, **kwargs):
 		if self.get_queryset():
 			return super().get(request, *args, **kwargs)
-		return Response({'detail': 'Invalid Authorization header. No credentials provided.'},
-						status=status.HTTP_401_UNAUTHORIZED)
+		return Response({'detail': 'Authentication credentials were not provided.'},
+						status=status.HTTP_403_FORBIDDEN)
 
 	def put(self, request, *args, **kwargs):
 		if self.get_queryset():
 			return super().update(request, *args, **kwargs)
-		return Response({'detail': 'Invalid Authorization header. No credentials provided.'},
-						status=status.HTTP_401_UNAUTHORIZED)
+		return Response({'detail': 'Authentication credentials were not provided.'},
+						status=status.HTTP_403_FORBIDDEN)
 
 	def delete(self, request, *args, **kwargs):
 		instance = self.get_object()
@@ -161,7 +151,6 @@ class UserBorrowedBookAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin,
 
 class UserBorrowedBookHistoryAPIView(generics.ListAPIView):
 	permission_classes 		= [IsStaffObjectPermission]
-	# authentication_classes 	= []
 	queryset 				= BorrowedBookHistory.objects.all()
 	serializer_class		= BorrowedBookHistorySerializer
 	lookup_field 			= 'id'
@@ -176,5 +165,5 @@ class UserBorrowedBookHistoryAPIView(generics.ListAPIView):
 	def get(self, request, *args, **kwargs):
 		if self.get_queryset():
 			return super().get(request, *args, **kwargs)
-		return Response({'detail': 'Invalid Authorization header. No credentials provided.'},
-						status=status.HTTP_401_UNAUTHORIZED)
+		return Response({'detail': 'Authentication credentials were not provided.'},
+						status=status.HTTP_403_FORBIDDEN)

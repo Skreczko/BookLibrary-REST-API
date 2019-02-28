@@ -26,9 +26,15 @@ class BookSerializer(serializers.ModelSerializer):
 			'book_left',
 		]
 
-	def get_borrowed_by(self, obj):
+	def get_borrowed_by(self, obj, *args, **kwargs):
 		qs = obj.borrowedbook_book.all()
-		return BorrowedBook2Serializer(qs, many=True, context=self.context).data
+		logged_user = self.context.get('logged_user')
+		if logged_user.is_staff:
+			return BorrowedBook2Serializer(qs, many=True, context=self.context).data
+		elif logged_user.is_authenticated:
+			qs = qs.filter(user=logged_user)
+			return BorrowedBook2Serializer(qs, many=True, context=self.context).data
+		return {'detail': 'Authentication credentials were not provided.'}
 
 
 class ConfmirmationSerializer(serializers.Serializer):
@@ -116,7 +122,9 @@ class BorrowedBook2Serializer(serializers.ModelSerializer):
 		if book.book_left == 0:
 			return serializers.ValidationError('{}: {} out of stock.'.format(book.title,book.author))
 		elif BorrowedBook.objects.filter(user=user, book=book).exists():
-			return serializers.ValidationError("{}: {} already exists in {}'s loan list".format(book.title, book.author, user))
+			return serializers.ValidationError("{}: {} already exists in {}'s loan list".format(book.title,
+																								book.author,
+																								user))
 		elif BorrowedBook.objects.filter(user=user).count() >= 5:
 			return serializers.ValidationError('{} reached limit of loan books.'.format(user))
 		return data
@@ -183,6 +191,7 @@ class BorrowedBookHistorySerializer(serializers.ModelSerializer):
 			'return_date',
 			'book',
 		]
+
 
 class UserBorrowedBookSerializer(serializers.ModelSerializer):
 	book = BookListSerializer(Book, many=False, read_only=True)
