@@ -70,7 +70,10 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
 
 class ConfmirmationSerializer(serializers.Serializer):
-	confirm_adding_book_by_barcode = serializers.BooleanField(default=False)
+	confirm_adding_book_by_barcode = serializers.BooleanField(default=False,
+															  help_text="Add book by built in camera - scan book barcode")
+	ISBN_number = serializers.IntegerField(allow_null=True,
+							   help_text='If you do not using adding book by barcode - please type ISBN number manually')
 
 
 class UserBookExtensionBookSerializer(serializers.Serializer):
@@ -80,6 +83,7 @@ class UserBookExtensionBookSerializer(serializers.Serializer):
 class UserLoginSerializer(serializers.ModelSerializer):
 	password 	= serializers.CharField(style={'input_type': 'password'}, write_only=True)
 	class Meta:
+
 		model = MyUser
 		fields = [
 			'username',

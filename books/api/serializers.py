@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 from django.contrib.auth import get_user_model
 from books.models import Book, BorrowedBook
+from accounts.models import MyUser
 import datetime
 
 User = get_user_model()
@@ -41,9 +42,15 @@ class ConfmirmationSerializer(serializers.Serializer):
 	confirm_create_by_barcode = serializers.BooleanField(default=False)
 
 
-class ConfmirmationUserAddSerializer(serializers.Serializer):
-	confirm_user_add_by_barcode = serializers.BooleanField(default=False)
+def get_users_in_database():
+	return list((x, x) for x in MyUser.objects.all().order_by('username'))
 
+
+class ConfmirmationUserAddSerializer(serializers.Serializer):
+	confirm_user_add_by_barcode = serializers.BooleanField(default=False,
+														   help_text='Add user by built in camera - scan user ID barcode')
+	users_in_database = serializers.ChoiceField(choices=get_users_in_database(), allow_null=True,
+								help_text='If you do not using adding user by barcode - please select the correct user')
 
 class BookListSerializer(serializers.ModelSerializer):
 	uri = serializers.SerializerMethodField(read_only=True)

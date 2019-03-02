@@ -67,7 +67,7 @@ class UserListAPIView(generics.ListAPIView):
 		return MyUser.objects.filter(username=self.request.user)
 
 
-class UserDetailAPIView(APIView):
+class UserDetailAPIView(generics.GenericAPIView):
 	permission_classes 		= [IsStaffCRUDPermission]
 	serializer_class 		= ConfmirmationSerializer
 	queryset 				= MyUser.objects.all()
@@ -82,29 +82,35 @@ class UserDetailAPIView(APIView):
 		else:
 			return MyUser.objects.none()
 
+	def book_create(self, user, number, *args, **kwargs):
+		if number:
+			if Book.objects.filter(ISBN=int(number)).exists():
+				book = Book.objects.get(ISBN=int(number))
+			else:
+				return Response({'error_message': "{} does not exists in database".format(number)},
+								status=status.HTTP_400_BAD_REQUEST)
+			if BorrowedBook.objects.filter(user=user, book=book).exists():
+				return Response(
+					{'error_message': "{}: {} already exists in {}'s loan list".format(book.title, book.author, user)},
+					status=status.HTTP_400_BAD_REQUEST)
+			elif book.book_left == 0:
+				return Response(
+					{'error_message': '{}: {} out of stock.'.format(book.title, book.author)},
+					status=status.HTTP_400_BAD_REQUEST)
+			else:
+				BorrowedBook.objects.create(user=user, book=book, ).save()
+				return redirect(reverse('account:user-detail', kwargs={'username': self.kwargs.get('username')}))
+
 	def post(self, request, format=None, **kwargs):
 		serializer = ConfmirmationSerializer(data=request.data)
 		if serializer.is_valid():
+			ISBN_number = str(serializer.data.get('ISBN_number'))
+			user = MyUser.objects.get(username=self.kwargs.get('username'))
 			if serializer.data.get('confirm_adding_book_by_barcode') == True:
-				number = capture_barcode()
-				if number:
-					user = MyUser.objects.get(username=self.kwargs.get('username'))
-					if Book.objects.filter(ISBN=int(number)).exists():
-						book = Book.objects.get(ISBN=int(number))
-					else:
-						return Response({'error_message': "{} does not exists in database".format(number)},
-										status=status.HTTP_400_BAD_REQUEST)
-					if BorrowedBook.objects.filter(user=user, book=book).exists():
-						return Response({'error_message': "{}: {} already exists in {}'s loan list".format(book.title, book.author, user)},
-										status=status.HTTP_400_BAD_REQUEST)
-					elif book.book_left == 0:
-						return Response(
-							{'error_message': '{}: {} out of stock.'.format(book.title, book.author)},
-							status=status.HTTP_400_BAD_REQUEST)
-					else:
-						BorrowedBook.objects.create(user=user,book=book,).save()
-						return redirect(reverse('account:user-detail', kwargs={'username': self.kwargs.get('username')}))
-			return Response({'message': 'New book will not be added'}, status=status.HTTP_200_OK)
+				return self.book_create(user=user,number=capture_barcode())
+			elif (len(ISBN_number) == 13 or len(ISBN_number) == 10) and (ISBN_number[:3] == '978' or ISBN_number[:3] == '979'):
+				return self.book_create(user=user, number=int(ISBN_number))
+			return Response({'message': 'Confirm adding book by barcode or invalid ISBN number'}, status=status.HTTP_400_BAD_REQUEST)
 
 	def get(self, request, *args, **kwargs):
 		if self.get_queryset():

@@ -45,40 +45,45 @@ class BookDetailAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, gener
 	def get_serializer_context(self, *args, **kwargs):
 		return {"logged_user": self.request.user, 'request': self.request}
 
+	def assign_book_for_user(self, username, *args, **kwargs):
+		if username:
+			book_id = self.kwargs.get('id')
+			book_obj = Book.objects.get(id=book_id)
+			user = MyUser.objects.filter(username=username)
+			if user.exists():
+				user = user.first()
+			else:
+				return Response(
+					{'error_message': '{} does not exists in database'.format(username)},
+					status=status.HTTP_400_BAD_REQUEST)
+			if Book.objects.get(id=book_id).book_left == 0:
+				return Response({'error_message': '{}: {} out of stock.'.format(book_obj.title, book_obj.author)},
+								status=status.HTTP_400_BAD_REQUEST)
+			elif BorrowedBook.objects.filter(user=user.id, book=book_obj).exists():
+				return Response({'error_message': "{}: {} already exists in {}'s loan list".format(book_obj.title,
+																								   book_obj.author,
+																								   user)},
+								status=status.HTTP_400_BAD_REQUEST)
+			elif BorrowedBook.objects.filter(user=user.id).count() >= 5:
+				return Response({'error_message': '{} reached limit of loan books.'.format(user)},
+								status=status.HTTP_400_BAD_REQUEST)
+			else:
+				BorrowedBook.objects.create(user=user, book=book_obj).save()
+				return Response({'message': "{} has been added successfully to {}'s loan list".format(user,
+																									  book_obj.title)},
+								status=status.HTTP_201_CREATED)
+
 	def post(self, request, *args, **kwargs):
 		serializer = ConfmirmationUserAddSerializer(data=request.data)
 		if serializer.is_valid():
 			if serializer.data.get('confirm_user_add_by_barcode') == True:
-				user_from_barcode = capture_user_barcode()
-				if user_from_barcode:
-					book_id = kwargs.get('id')
-					book_obj = Book.objects.get(id=book_id)
-					user = MyUser.objects.filter(username=user_from_barcode)
-					if user.exists():
-						user = user.first()
-					else:
-						return Response(
-							{'error_message': '{} does not exists in database'.format(user_from_barcode)},
-							status=status.HTTP_400_BAD_REQUEST)
-					if Book.objects.get(id=book_id).book_left == 0:
-						return Response({'error_message': '{}: {} out of stock.'.format(book_obj.title,book_obj.author)},
-										status=status.HTTP_400_BAD_REQUEST)
-					elif BorrowedBook.objects.filter(user=user.id, book=book_obj).exists():
-						return Response({'error_message': "{}: {} already exists in {}'s loan list".format(book_obj.title,
-																										   book_obj.author,
-																										   user)},
-										status=status.HTTP_400_BAD_REQUEST)
-					elif BorrowedBook.objects.filter(user=user.id).count() >= 5:
-						return Response({'error_message': '{} reached limit of loan books.'.format(user)},
-										status=status.HTTP_400_BAD_REQUEST)
-					else:
-						BorrowedBook.objects.create(user=user, book=book_obj).save()
-						return Response({'message': "{} has been added successfully to {}'s loan list".format(user,
-																										book_obj.title)},
-										status=status.HTTP_201_CREATED)
-			else:
-				return Response({'message': 'User will not be added'},
-								status=status.HTTP_200_OK)
+				return self.assign_book_for_user(username=capture_user_barcode())
+
+			elif serializer.data.get('users_in_database'):
+				return self.assign_book_for_user(username=serializer.data.get('users_in_database'))
+
+			return Response({'message': 'Confirm adding user by barcode or choose user from choice field'},
+								status=status.HTTP_400_BAD_REQUEST)
 
 	def put(self, request, *args, **kwargs):
 		return self.update(request, *args, **kwargs)
