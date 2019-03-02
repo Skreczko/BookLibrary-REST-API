@@ -42,7 +42,6 @@ class AuthAPIView(APIView):
 				payload = jwt_payload_handler(user)
 				token = jwt_encode_handler(payload)
 				my_payload = jwt_response_payload_handler(token, user, request=request)
-				print(payload,"\n\n\n\n",token,"\n\n\n\n",my_payload)
 				return Response(my_payload)
 			else:
 				return Response({'detail': 'Invalid credential'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -59,6 +58,8 @@ class RegisterAPIView(generics.CreateAPIView):
 class UserListAPIView(generics.ListAPIView):
 	serializer_class 		= UserListSerializer
 	queryset 				= MyUser.objects.all()
+	search_fields			= ('username', 'email')
+	ordering_fields 		= ('username', 'email')
 
 	def get_queryset(self, *args, **kwargs):
 		if self.request.user.is_staff:

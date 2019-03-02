@@ -101,7 +101,6 @@ data_book_1 = {
     "publisher": "Insignis",
     "publishedDate": 2017,
     "description": "",
-    "photo": None,
     "amount": 20
 }
 
@@ -112,7 +111,6 @@ data_book_2 = {
     "publisher": "Writer",
     "publishedDate": 2002,
     "description": "In this helpful resource, over 30 fantasy authors reveal their insider secrets for success. Features detailed overviews on such topics as generating ideas, overcoming writer's block, mastering the genre, marketing your work, and more.",
-    "photo": None,
     "amount": 5
 }
 
@@ -123,7 +121,6 @@ data_book_3 = {
     "publisher": "Ace Hardcover",
     "publishedDate": 1999,
     "description": "The new hardcover release of a sci-fi classic follows the adventures of Paul Atreides, the son of a betrayed duke given up for dead on a treacherous desert planet and adopted by its fierce, nomadic people, who help him unravel his most unexpected destiny. Reissue.",
-    "photo": None,
     "amount": 10
 }
 
@@ -134,7 +131,6 @@ data_book_4 = {
     "publisher": "Orbit",
     "publishedDate": 2018,
     "description": "The New York Times bestselling series that inspired the international hit video game: The Witcher. *Look out for Season of Storms in April 2018*",
-    "photo": None,
     "amount": 8
 }
 
@@ -145,7 +141,6 @@ data_book_5 = {
     "publisher": "Mariner Books",
     "publishedDate": 2012,
     "description": "Celebrating 75 years of one of the world's most treasured classics with an all new trade paperback edition. Repackaged with new cover art. 500,000 first printing.",
-    "photo": None,
     "amount": 3
 }
 
@@ -155,4 +150,3 @@ r_data_book_2 = requests.post(BOOK_ENDPOINT, data=json.dumps(data_book_2), heade
 r_data_book_3 = requests.post(BOOK_ENDPOINT, data=json.dumps(data_book_3), headers=headers)
 r_data_book_4 = requests.post(BOOK_ENDPOINT, data=json.dumps(data_book_4), headers=headers)
 r_data_book_5 = requests.post(BOOK_ENDPOINT, data=json.dumps(data_book_5), headers=headers)
-print(r_data_book_4.json())
