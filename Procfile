@@ -1,1 +1,1 @@
-web: gunicorn src.wsgi --log-file -heroku buildpacks
+web: gunicorn src.wsgi --log-file -
