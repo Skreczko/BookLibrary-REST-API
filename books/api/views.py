@@ -15,12 +15,17 @@ class BookListAPIView(generics.ListCreateAPIView):
 	permission_classes 		= []
 	serializer_class 		= None
 	queryset 				= Book.objects.all()
+	search_fields			= ['ISBN', 'author', 'title']
+	ordering_fields			= ['ISBN', 'author', 'title']
 
 	def get_serializer_class(self, *args, **kwargs):
 		if self.request.method == 'POST':
 			return BookSerializer
 		if self.request.method == 'GET':
 			return BookListSerializer
+
+	def get_serializer_context(self, *args, **kwargs):
+		return {"logged_user": self.request.user, 'request': self.request}
 
 	def post(self, request, *args, **kwargs):
 		if self.request.user.is_staff:
@@ -78,7 +83,6 @@ class BookDetailAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, gener
 		if serializer.is_valid():
 			if serializer.data.get('confirm_user_add_by_barcode') == True:
 				return self.assign_book_for_user(username=capture_user_barcode())
-
 			elif serializer.data.get('users_in_database'):
 				return self.assign_book_for_user(username=serializer.data.get('users_in_database'))
 

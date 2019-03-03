@@ -21,7 +21,6 @@ class BookSerializer(serializers.ModelSerializer):
 			'publisher',
 			'publishedDate',
 			'description',
-			'photo',
 			'borrowed_by',
 			'amount',
 			'book_left',
@@ -42,15 +41,12 @@ class ConfmirmationSerializer(serializers.Serializer):
 	confirm_create_by_barcode = serializers.BooleanField(default=False)
 
 
-def get_users_in_database():
-	return list((x, x) for x in MyUser.objects.all().order_by('username'))
-
-
 class ConfmirmationUserAddSerializer(serializers.Serializer):
 	confirm_user_add_by_barcode = serializers.BooleanField(default=False,
 														   help_text='Add user by built in camera - scan user ID barcode')
-	users_in_database = serializers.ChoiceField(choices=get_users_in_database(), allow_null=True,
-								help_text='If you do not using adding user by barcode - please select the correct user')
+	users_in_database = serializers.CharField(allow_null=True,
+								help_text='If you do not using adding user by barcode - please write the correct user ID')
+
 
 class BookListSerializer(serializers.ModelSerializer):
 	uri = serializers.SerializerMethodField(read_only=True)
@@ -109,11 +105,13 @@ class BorrowedBook2Serializer(serializers.ModelSerializer):
 	username = serializers.PrimaryKeyRelatedField(source='user.username', read_only=True)
 	exceed_payment_in_zloty = serializers.SerializerMethodField(read_only=True)
 	exceed_days = serializers.SerializerMethodField(read_only=True)
+	uri_borrow = serializers.SerializerMethodField(read_only=True)
 	uri_user = serializers.SerializerMethodField(read_only=True)
 	class Meta:
 		model = BorrowedBook
 		fields = [
 			'id',
+			'uri_borrow',
 			'user',
 			'uri_user',
 			'username',
@@ -135,6 +133,10 @@ class BorrowedBook2Serializer(serializers.ModelSerializer):
 		elif BorrowedBook.objects.filter(user=user).count() >= 5:
 			return serializers.ValidationError('{} reached limit of loan books.'.format(user))
 		return data
+
+	def get_uri_borrow(self,obj):
+		request = self.context.get('request')
+		return reverse('account:user-book-detail', kwargs={'id':obj.id, 'username':obj.user}, request=request)
 
 	def get_uri_user(self,obj):
 		request = self.context.get('request')
