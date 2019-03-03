@@ -5,7 +5,6 @@ import time
 import cv2
 
 
-
 def capture_barcode(capture=True):
 	vs = VideoStream().start()
 	time.sleep(0.0)
