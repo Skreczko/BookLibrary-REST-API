@@ -3,7 +3,7 @@ import requests
 
 """	LOGIN AS ADMIN	"""
 
-AUTH_ENDPOINT = 'http://127.0.0.1:8000/api/auth/'
+AUTH_ENDPOINT = 'https://rest-book-library.herokuapp.com/api/auth/'
 
 headers = {
 	"Content-Type": "application/json",
@@ -20,7 +20,7 @@ token_admin = r_admin.json()['token']
 
 """	CREATING USERS	"""
 
-CREATING_ENDPOINT = 'http://127.0.0.1:8000/api/auth/register/'
+CREATING_ENDPOINT = 'https://rest-book-library.herokuapp.com/api/auth/register/'
 
 headers = {
 	'Content-Type': 'application/json'
@@ -54,7 +54,7 @@ r_user3 = requests.post(CREATING_ENDPOINT, data=json.dumps(data_user3), headers=
 
 """	LOGIN AS NON STAFF USERS	"""
 
-AUTH_ENDPOINT = 'http://127.0.0.1:8000/api/auth/'
+AUTH_ENDPOINT = 'https://rest-book-library.herokuapp.com/api/auth/'
 
 headers = {
 	"Content-Type": "application/json",
@@ -87,7 +87,7 @@ token_user3 = r_user3_login.json()['token']
 
 """ CREATING BOOKS """
 
-BOOK_ENDPOINT = 'http://127.0.0.1:8000/api/books/'
+BOOK_ENDPOINT = 'https://rest-book-library.herokuapp.com/api/books/'
 
 headers = {
 	'Content-Type': 'application/json',
@@ -158,11 +158,11 @@ id_book_5 = r_data_book_5.json().get('id')
 
 """ CREATING BORROWING BOOK IN BOOK SECTION """
 
-BOOK_ENDPOINT_1 = 'http://127.0.0.1:8000/api/books/detail/{}/'.format(id_book_1)
-BOOK_ENDPOINT_2 = 'http://127.0.0.1:8000/api/books/detail/{}/'.format(id_book_2)
-BOOK_ENDPOINT_3 = 'http://127.0.0.1:8000/api/books/detail/{}/'.format(id_book_3)
-BOOK_ENDPOINT_4 = 'http://127.0.0.1:8000/api/books/detail/{}/'.format(id_book_4)
-BOOK_ENDPOINT_5 = 'http://127.0.0.1:8000/api/books/detail/{}/'.format(id_book_5)
+BOOK_ENDPOINT_1 = 'https://rest-book-library.herokuapp.com/api/books/detail/{}/'.format(id_book_1)
+BOOK_ENDPOINT_2 = 'https://rest-book-library.herokuapp.com/api/books/detail/{}/'.format(id_book_2)
+BOOK_ENDPOINT_3 = 'https://rest-book-library.herokuapp.com/api/books/detail/{}/'.format(id_book_3)
+BOOK_ENDPOINT_4 = 'https://rest-book-library.herokuapp.com/api/books/detail/{}/'.format(id_book_4)
+BOOK_ENDPOINT_5 = 'https://rest-book-library.herokuapp.com/api/books/detail/{}/'.format(id_book_5)
 
 headers = {
 	'Content-Type': 'application/json',
@@ -202,9 +202,9 @@ r_create_3_5 = requests.post(BOOK_ENDPOINT_5, data=json.dumps(data_3), headers=h
 
 " GETTING IDs OF BORROWED BOOKS FOR EACH USER - FOR DELETING"
 
-BORROWED_BOOK_ENDPOINT_1 = 'http://127.0.0.1:8000/api/auth/user/{}/'.format(data_user1['username'])
-BORROWED_BOOK_ENDPOINT_2 = 'http://127.0.0.1:8000/api/auth/user/{}/'.format(data_user2['username'])
-BORROWED_BOOK_ENDPOINT_3 = 'http://127.0.0.1:8000/api/auth/user/{}/'.format(data_user3['username'])
+BORROWED_BOOK_ENDPOINT_1 = 'https://rest-book-library.herokuapp.com/api/auth/user/{}/'.format(data_user1['username'])
+BORROWED_BOOK_ENDPOINT_2 = 'https://rest-book-library.herokuapp.com/api/auth/user/{}/'.format(data_user2['username'])
+BORROWED_BOOK_ENDPOINT_3 = 'https://rest-book-library.herokuapp.com/api/auth/user/{}/'.format(data_user3['username'])
 
 headers = {
 	'Content-Type': 'application/json',
@@ -233,13 +233,13 @@ id_borrow_3_5 = r_get_3.json()[0]['books'][4]['id']
 
 " DELETE USER BOOKS - AUTOMATICALLY BOOKS ARE ADDED TO BORROW-HISTORY"
 
-BORROWED_BOOK_DELETING_ENDPOINT_1_1 = 'http://127.0.0.1:8000/api/auth/user/{}/{}/'.format(data_user1['username'], id_borrow_1_1)
-BORROWED_BOOK_DELETING_ENDPOINT_1_3 = 'http://127.0.0.1:8000/api/auth/user/{}/{}/'.format(data_user1['username'], id_borrow_1_3)
-BORROWED_BOOK_DELETING_ENDPOINT_2_2 = 'http://127.0.0.1:8000/api/auth/user/{}/{}/'.format(data_user2['username'],id_borrow_2_2)
-BORROWED_BOOK_DELETING_ENDPOINT_2_3 = 'http://127.0.0.1:8000/api/auth/user/{}/{}/'.format(data_user2['username'],id_borrow_2_3)
-BORROWED_BOOK_DELETING_ENDPOINT_2_4 = 'http://127.0.0.1:8000/api/auth/user/{}/{}/'.format(data_user2['username'],id_borrow_2_4)
-BORROWED_BOOK_DELETING_ENDPOINT_3_2 = 'http://127.0.0.1:8000/api/auth/user/{}/{}/'.format(data_user3['username'], id_borrow_3_2)
-BORROWED_BOOK_DELETING_ENDPOINT_3_5 = 'http://127.0.0.1:8000/api/auth/user/{}/{}/'.format(data_user3['username'], id_borrow_3_5)
+BORROWED_BOOK_DELETING_ENDPOINT_1_1 = 'https://rest-book-library.herokuapp.com/api/auth/user/{}/{}/'.format(data_user1['username'], id_borrow_1_1)
+BORROWED_BOOK_DELETING_ENDPOINT_1_3 = 'https://rest-book-library.herokuapp.com/api/auth/user/{}/{}/'.format(data_user1['username'], id_borrow_1_3)
+BORROWED_BOOK_DELETING_ENDPOINT_2_2 = 'https://rest-book-library.herokuapp.com/api/auth/user/{}/{}/'.format(data_user2['username'],id_borrow_2_2)
+BORROWED_BOOK_DELETING_ENDPOINT_2_3 = 'https://rest-book-library.herokuapp.com/api/auth/user/{}/{}/'.format(data_user2['username'],id_borrow_2_3)
+BORROWED_BOOK_DELETING_ENDPOINT_2_4 = 'https://rest-book-library.herokuapp.com/api/auth/user/{}/{}/'.format(data_user2['username'],id_borrow_2_4)
+BORROWED_BOOK_DELETING_ENDPOINT_3_2 = 'https://rest-book-library.herokuapp.com/api/auth/user/{}/{}/'.format(data_user3['username'], id_borrow_3_2)
+BORROWED_BOOK_DELETING_ENDPOINT_3_5 = 'https://rest-book-library.herokuapp.com/api/auth/user/{}/{}/'.format(data_user3['username'], id_borrow_3_5)
 
 headers = {
 	'Content-Type': 'application/json',
