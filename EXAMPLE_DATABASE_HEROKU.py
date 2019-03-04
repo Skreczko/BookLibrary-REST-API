@@ -150,6 +150,7 @@ r_data_book_2 = requests.post(BOOK_ENDPOINT, data=json.dumps(data_book_2), heade
 r_data_book_3 = requests.post(BOOK_ENDPOINT, data=json.dumps(data_book_3), headers=headers)
 r_data_book_4 = requests.post(BOOK_ENDPOINT, data=json.dumps(data_book_4), headers=headers)
 r_data_book_5 = requests.post(BOOK_ENDPOINT, data=json.dumps(data_book_5), headers=headers)
+print(r_data_book_1.json())
 id_book_1 = r_data_book_1.json().get('id')
 id_book_2 = r_data_book_2.json().get('id')
 id_book_3 = r_data_book_3.json().get('id')
