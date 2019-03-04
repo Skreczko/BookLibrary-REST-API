@@ -6,7 +6,7 @@ from datetime import timedelta
 DATE_FIELD = ((x,x) for x in range(1900, (datetime.now().year+1)))
 
 class Book(models.Model):
-	ISBN 			= models.IntegerField(unique=True)
+	ISBN 			= models.BigIntegerField(unique=True)
 	author 			= models.CharField(max_length=128)
 	title 			= models.CharField(max_length=124)
 	amount			= models.PositiveSmallIntegerField(default=1)
