@@ -5,22 +5,24 @@ from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import BookSerializer, BookListSerializer, ConfmirmationSerializer, ConfmirmationUserAddSerializer
+from .serializers import BookSerializer, BookListSerializer, ConfmirmationSerializer, ConfmirmationUserAddSerializer,ISBNSerializer, Book2Serializer
 from books.models import Book, BorrowedBook
 from accounts.models import MyUser
 from books.video_barcode import *
 from accounts.api.permissions import IsStaffOrReadOnly
 
 class BookListAPIView(generics.ListCreateAPIView):
-	permission_classes 		= []
+	permission_classes 		= [IsStaffOrReadOnly]
 	serializer_class 		= None
 	queryset 				= Book.objects.all()
 	search_fields			= ['ISBN', 'author', 'title']
 	ordering_fields			= ['ISBN', 'author', 'title']
 
 	def get_serializer_class(self, *args, **kwargs):
+		if self.request.method == 'PUT':
+			return Book2Serializer
 		if self.request.method == 'POST':
-			return BookSerializer
+			return ISBNSerializer
 		if self.request.method == 'GET':
 			return BookListSerializer
 
@@ -28,11 +30,78 @@ class BookListAPIView(generics.ListCreateAPIView):
 		return {"logged_user": self.request.user, 'request': self.request}
 
 	def post(self, request, *args, **kwargs):
-		if self.request.user.is_staff:
-			return super().post(request, *args, **kwargs)
-		else:
-			return Response({'detail': 'Authentication credentials were not provided.'},
-							status=status.HTTP_403_FORBIDDEN)
+		serializer = ISBNSerializer(data=request.data)
+		if serializer.is_valid():
+			print(serializer.is_valid())
+			if serializer.data.get('check_ISBN'):
+				number = serializer.data.get('check_ISBN')
+				print(number)
+				headers = {
+					"Content-Type": "application/json",
+				}
+				ENDPOINT = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + str(number)
+				answer_serializer = requests.get(ENDPOINT, headers=headers)
+				try:
+					ISBN1 = answer_serializer.json()['items'][0]['volumeInfo']['industryIdentifiers'][0]['identifier']
+					ISBN2 = answer_serializer.json()['items'][0]['volumeInfo']['industryIdentifiers'][1]['identifier']
+					if ISBN1[:2] == '97':
+						ISBN = ISBN1
+					else:
+						ISBN = ISBN2
+					author = answer_serializer.json()['items'][0]['volumeInfo']['authors'][0] or None
+					title = answer_serializer.json()['items'][0]['volumeInfo']['title'] or None
+					publisher = answer_serializer.json()['items'][0]['volumeInfo']['publisher'] or None
+					publishedDate = answer_serializer.json()['items'][0]['volumeInfo']['publishedDate'] or None
+					if len(publishedDate) > 4:
+						publishedDate = publishedDate[:4]
+					if Book.objects.filter(ISBN=ISBN).exists():
+						return Response({'detail': [
+							{'message': 'This book already exists in database.'},
+						]}, status=status.HTTP_400_BAD_REQUEST)
+					else:
+						# serializer = BookSerializer(data={'ISBN':ISBN,
+						# 								  'author':author,
+						# 								  'title':title,
+						# 								  'publisher':publisher,
+						# 								  'publishedDate':publishedDate,
+						# 								  })
+						# if serializer.is_valid():
+						# 	return Response(serializer.data, status=status.HTTP_201_CREATED)
+						# return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+						current_book = Book.objects.create(
+							ISBN=ISBN,
+							author=author,
+							title=title,
+							publisher=publisher,
+							publishedDate=publishedDate,
+						)
+						current_book.save()
+						return redirect(reverse('books:book-detail', kwargs={'id': current_book.id}))
+				except:
+					return Response(
+						{'message': 'This book does not exists in google database. Please add book manually.'},
+						status=status.HTTP_404_NOT_FOUND)
+
+	def put(self, request, *args, **kwargs):
+		serializer = Book2Serializer(data=request.data)
+		if serializer.is_valid():
+			ISBN = serializer.data.get('ISBN')
+			if not Book.objects.filter(ISBN=ISBN).exists():
+				author = serializer.data.get('author')
+				title = serializer.data.get('title')
+				publisher = serializer.data.get('publisher')
+				publishedDate = serializer.data.get('publishedDate')
+				Book.objects.update_or_create(
+					ISBN=ISBN,
+					author=author,
+					title=title,
+					publisher=publisher,
+					publishedDate=publishedDate,
+				)
+				new_book = Book.objects.filter(ISBN=ISBN).first()
+				return redirect(reverse('books:book-detail', kwargs={'id': new_book.id}))
+		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class BookDetailAPIView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.RetrieveAPIView):

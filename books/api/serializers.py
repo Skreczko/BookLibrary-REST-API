@@ -37,6 +37,24 @@ class BookSerializer(serializers.ModelSerializer):
 		return {'detail': 'Authentication credentials were not provided.'}
 
 
+class Book2Serializer(serializers.ModelSerializer):
+	class Meta:
+		model = Book
+		fields = [
+			'id',
+			'ISBN',
+			'author',
+			'title',
+			'publisher',
+			'publishedDate',
+			'description',
+			'amount',
+		]
+
+class ISBNSerializer(serializers.Serializer):
+	check_ISBN = serializers.IntegerField(help_text='Type ISBN manually to add book from Google books database or add /scan/ in your http request to add book automatically.')
+
+
 class ConfmirmationSerializer(serializers.Serializer):
 	confirm_create_by_barcode = serializers.BooleanField(default=False)
 
