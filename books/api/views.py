@@ -59,15 +59,6 @@ class BookListAPIView(generics.ListCreateAPIView):
 							{'message': 'This book already exists in database.'},
 						]}, status=status.HTTP_400_BAD_REQUEST)
 					else:
-						# serializer = BookSerializer(data={'ISBN':ISBN,
-						# 								  'author':author,
-						# 								  'title':title,
-						# 								  'publisher':publisher,
-						# 								  'publishedDate':publishedDate,
-						# 								  })
-						# if serializer.is_valid():
-						# 	return Response(serializer.data, status=status.HTTP_201_CREATED)
-						# return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 						current_book = Book.objects.create(
 							ISBN=ISBN,
 							author=author,

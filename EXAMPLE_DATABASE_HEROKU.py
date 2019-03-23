@@ -66,7 +66,7 @@ data_user1 = {
 }
 
 data_user2 = {
-	'username': 'TestUser2',
+	'username': 'F',
 	'password': 'TestUser2',
 }
 
