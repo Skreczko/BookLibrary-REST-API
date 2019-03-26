@@ -218,7 +218,6 @@ class BookAPITestCase(APITestCase):
 
 	"""..................USER SECTION.................."""
 
-	"""http://127.0.0.1:8000/api/auth/user/"""
 
 	def test_get_user_list_as_staff(self):
 		self.login_user('Admin')
@@ -240,10 +239,51 @@ class BookAPITestCase(APITestCase):
 
 	def test_get_user_detail_as_admin(self):
 		self.borrow_book('test_user1')
+		self.client.credentials()
+		self.login_user("Admin")
 		response = self.client.get(reverse('account:user-detail', kwargs={
 			'username': 'test_user1'
 		}), format='json')
-		print(response.data.get('results'))
-		self.assertEqual(response.data.get('results'), 'test_user1')
+		self.assertEqual((response.data)[0].get('username'), 'test_user1')
+
+	def test_get_user_detail_as_anonymous(self):
+		self.borrow_book('test_user1')
+		self.client.credentials()
+		response = self.client.get(reverse('account:user-detail', kwargs={
+			'username': 'test_user1'
+		}), format='json')
+		self.assertEqual(response.data.get('results'), None)
+
+	def test_get_user_detail_as_other_user(self):
+		self.borrow_book('test_user2')
+		self.client.credentials()
+		response = self.client.get(reverse('account:user-detail', kwargs={
+			'username': 'test_user1'
+		}), format='json')
+		self.assertEqual(response.data.get('results'), None)
+
+	def test_user_detail_adding_book_as_admin(self):
+		data_book = {
+			"confirm_adding_book_by_barcode": False,
+			"ISBN_number": 9780316438988,
+		}
+		self.login_user('Admin')
+		url_add_book = reverse('account:user-detail', kwargs={
+			'username': 'test_user1'})
+		response_post = self.client.post(url_add_book, data_book, format='json')
+		response_get = self.client.get(url_add_book, format='json')
+		self.assertEqual(response_get.data[0]['books'][0]['book']['ISBN'], 9780316438988)
+
+	def test_user_detail_adding_book_as_user(self):
+		data_book = {
+			"confirm_adding_book_by_barcode": False,
+			"ISBN_number": 9780316438988,
+		}
+		self.login_user('User1')
+		url_add_book = reverse('account:user-detail', kwargs={
+			'username': 'test_user1'})
+		response_post = self.client.post(url_add_book, data_book, format='json')
+		self.assertEqual(response_post.status_code, status.HTTP_403_FORBIDDEN)
+
 
 
